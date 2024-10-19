@@ -1,0 +1,8 @@
+BEGIN
+;
+
+DROP TABLE IF EXISTS "movie_genres";
+
+DROP TABLE IF EXISTS "genres";
+
+COMMIT;
