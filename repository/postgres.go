@@ -39,12 +39,9 @@ func NewPostgresRepo[T Entity](dbPool QueryPgx) *PostgresRepo[T] {
 	tableName := table.TableName()
 
 	return &PostgresRepo[T]{
-		db: dbPool,
-		QueryBasicSelect: fmt.Sprintf(`SELECT %s FROM %s `,
-			strings.Join(columns, ","),
-			tableName,
-		),
-		tableName: tableName,
+		db:               dbPool,
+		QueryBasicSelect: fmt.Sprintf(`SELECT %s FROM %s `, strings.Join(columns, ","), tableName),
+		tableName:        tableName,
 	}
 }
 

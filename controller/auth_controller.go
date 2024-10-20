@@ -11,7 +11,7 @@ import (
 type (
 	authService interface {
 		RegisterUser(ctx context.Context, req dto.RegisterPayload) error
-		LoginUser(ctx context.Context, req dto.LoginPayload) (string, error)
+		LoginUser(ctx context.Context, req dto.LoginPayload) (*dto.LoginResponse, error)
 	}
 
 	AuthController struct {

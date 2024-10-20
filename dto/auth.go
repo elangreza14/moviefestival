@@ -11,4 +11,9 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
+	LoginResponse struct {
+		Token       string `json:"token"`
+		Permissions any    `json:"permissions"`
+	}
 )

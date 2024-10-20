@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -52,6 +53,32 @@ func (am *AuthMiddleware) MustAuthMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set(UserMiddlewareKey, user)
+
+		c.Next()
+	}
+}
+
+func (am *AuthMiddleware) MustHavePermissionMiddleware(permissions ...model.UserPermission) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRaw, ok := c.Get(UserMiddlewareKey)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.NewBaseResponse(nil, errors.New("cannot unauthorize this user")))
+			return
+		}
+
+		user, ok := userRaw.(*model.User)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.NewBaseResponse(nil, errors.New("not valid user")))
+			return
+		}
+
+		for _, permission := range permissions {
+			ok := user.ValidPermission(permission.Val)
+			if !ok {
+				c.AbortWithStatusJSON(http.StatusForbidden, dto.NewBaseResponse(nil, fmt.Errorf("user doesn't have %s permission", permission.Name)))
+				return
+			}
+		}
 
 		c.Next()
 	}

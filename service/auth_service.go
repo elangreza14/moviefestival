@@ -56,40 +56,48 @@ func (as *AuthService) RegisterUser(ctx context.Context, req dto.RegisterPayload
 	return nil
 }
 
-func (as *AuthService) LoginUser(ctx context.Context, req dto.LoginPayload) (string, error) {
-	user, err := as.UserRepo.Get(ctx, "email", req.Email, "id", "password")
+func (as *AuthService) LoginUser(ctx context.Context, req dto.LoginPayload) (*dto.LoginResponse, error) {
+	user, err := as.UserRepo.Get(ctx, "email", req.Email, "id", "password", "permission")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ok := user.IsPasswordValid(req.Password)
 	if !ok {
-		return "", errors.New("password not valid")
+		return nil, errors.New("password not valid")
 	}
 
 	token, err := as.TokenRepo.Get(ctx, "user_id", user.ID, "token")
 	if err != nil && err != pgx.ErrNoRows {
-		return "", err
+		return nil, err
 	}
+
+	user.LoadPermissions()
 
 	if token != nil {
 		_, err = token.IsTokenValid([]byte("test"))
 		if err == nil {
-			return token.Token, nil
+			return &dto.LoginResponse{
+				Token:       token.Token,
+				Permissions: user.Permissions,
+			}, nil
 		}
 	}
 
 	token, err = model.NewToken([]byte("test"), user.ID, "LOGIN")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = as.TokenRepo.Create(ctx, *token)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return token.Token, nil
+	return &dto.LoginResponse{
+		Token:       token.Token,
+		Permissions: user.Permissions,
+	}, nil
 }
 
 func (as *AuthService) ProcessToken(ctx context.Context, reqToken string) (*model.User, error) {
@@ -105,5 +113,5 @@ func (as *AuthService) ProcessToken(ctx context.Context, reqToken string) (*mode
 		return nil, err
 	}
 
-	return as.UserRepo.Get(ctx, "id", token.UserID)
+	return as.UserRepo.Get(ctx, "id", token.UserID, "id", "email", "permission")
 }

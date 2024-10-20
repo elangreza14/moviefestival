@@ -13,6 +13,7 @@ import (
 
 	"github.com/elangreza14/moviefestival/cmd/http/routes"
 	"github.com/elangreza14/moviefestival/controller"
+	"github.com/elangreza14/moviefestival/middleware"
 	"github.com/elangreza14/moviefestival/repository"
 	"github.com/elangreza14/moviefestival/service"
 	"github.com/gin-contrib/cors"
@@ -50,7 +51,7 @@ func main() {
 	// dependency injection
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokenRepository(db)
-	movieRepository := repository.NewMovieRepository(db)
+	movieRepository := repository.NewMovieRepository(db, db)
 
 	authService := service.NewAuthService(userRepository, tokenRepository)
 	movieService := service.NewMovieService(movieRepository)
@@ -78,12 +79,12 @@ func main() {
 	})
 
 	// TODO use this
-	// authMiddleware := middleware.NewAuthMiddleware(authService)
+	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// group api
 	apiGroup := router.Group("/api")
 	routes.AuthRoute(apiGroup, authController)
-	routes.MovieRoute(apiGroup, movieController)
+	routes.MovieRoute(apiGroup, movieController, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    os.Getenv("HTTP_PORT"),
