@@ -40,6 +40,7 @@ if te response is `pong`. The Server is running
 - API to search movie by title/description/artists/genres
   1. **DONE** API get movies `GET {{API_ENDPOINT}}/api/movies` with additional search query
 - API to track movie viewership
+  1. **DONE** API get most viewed movie `GET {{API_ENDPOINT}}/api/movies/popular`
 
 ### Bonus Requirements
 

@@ -3,30 +3,39 @@ package model
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-type MovieView struct {
-	MovieID int `db:"id"`
+type MovieViewHistory struct {
+	MovieID int       `db:"id"`
+	UserID  uuid.UUID `db:"id"`
 
 	CreatedAt time.Time    `db:"created_at"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
-func (c MovieView) TableName() string {
-	return "movie_views"
+func (c MovieViewHistory) TableName() string {
+	return "movie_views_histories"
 }
 
-func NewMovieView(movieID int) *MovieView {
-	return &MovieView{MovieID: movieID}
+func NewMovieViewHistory(movieID int) *MovieViewHistory {
+	return &MovieViewHistory{MovieID: movieID}
 }
 
 // to create in DB
-func (c MovieView) Data() map[string]any {
-	return map[string]any{
+func (c MovieViewHistory) Data() map[string]any {
+	maps := map[string]any{
 		"movie_id": c.MovieID,
 	}
+
+	if uuid.Nil != c.UserID {
+		maps["user_id"] = c.UserID
+	}
+
+	return maps
 }
 
-func (c MovieView) Columns() []string {
+func (c MovieViewHistory) Columns() []string {
 	return []string{"movie_id"}
 }

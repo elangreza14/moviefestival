@@ -25,6 +25,12 @@ func NewMovieViewRepository(
 
 func (ur *movieViewRepository) AddMovieViewTX(ctx context.Context, movieID int) error {
 	return ur.txRepo.WithTX(ctx, func(tx QueryPgx) error {
+		movieViewHistoryRepo := NewMovieViewHistoryRepository(tx)
+		err := movieViewHistoryRepo.Create(ctx, *model.NewMovieViewHistory(movieID))
+		if err != nil {
+			return err
+		}
+
 		movieRepo := NewMovieViewRepository(tx, nil)
 		return movieRepo.UpsertMovieView(ctx, movieID)
 	})

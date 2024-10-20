@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/elangreza14/moviefestival/dto"
@@ -43,6 +45,8 @@ func (cs *movieService) MovieList(ctx context.Context, req dto.MovieListParams) 
 		return nil, err
 	}
 
+	baseUrl := fmt.Sprintf("http://localhost%s", os.Getenv("HTTP_PORT"))
+
 	res := make([]dto.MovieListResponseElement, 0)
 	for _, movie := range movie {
 		res = append(res, dto.MovieListResponseElement{
@@ -53,7 +57,7 @@ func (cs *movieService) MovieList(ctx context.Context, req dto.MovieListParams) 
 			Views:       movie.Views,
 			Artists:     movie.Artist,
 			Genres:      movie.Genres,
-			WatchUrl:    movie.WatchUrl,
+			WatchUrl:    baseUrl + "/api/movies/public/" + movie.WatchUrl,
 		})
 	}
 
@@ -105,12 +109,14 @@ func (cs *movieService) GetMovieDetail(ctx context.Context, movieID int) (*dto.M
 		return nil, err
 	}
 
+	baseUrl := fmt.Sprintf("http://localhost%s", os.Getenv("HTTP_PORT"))
+
 	return &dto.MovieListResponseElement{
 		ID:          movieID,
 		Title:       movie.Title,
 		Description: movie.Description,
 		Duration:    movie.Duration.String(),
-		WatchUrl:    movie.WatchUrl,
+		WatchUrl:    baseUrl + "/api/movies/public/" + movie.WatchUrl,
 		Views:       movie.Views,
 		Artists:     movie.Artist,
 		Genres:      movie.Genres,

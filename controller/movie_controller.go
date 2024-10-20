@@ -66,7 +66,7 @@ func (cc *MovieController) UploadMovie() gin.HandlerFunc {
 			return
 		}
 
-		dst := "public/" + file.Filename
+		dst := file.Filename
 		err = c.SaveUploadedFile(file, dst)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
