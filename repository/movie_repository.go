@@ -133,15 +133,20 @@ func (ur *movieRepository) GetMovieDetail(ctx context.Context, movieID int) (*mo
 				JSON_AGG(distinct mg.genre_name) as genres
 			FROM 
 				movies m 
-			join 
+			left join 
 				movie_artists ma on m.id = ma.movie_id 
-			join 
+			left join 
 				movie_genres mg on m.id = mg.movie_id 
 			left join
 				movie_views mv on m.id = mv.movie_id
 			where m.id = $1 group by m.id, mv."views" limit 1`
 
-	movie := &model.Movie{}
+	genres := []string{}
+	artists := []string{}
+	movie := &model.Movie{
+		Genres: []string{},
+		Artist: []string{},
+	}
 	err := ur.db.QueryRow(ctx, sql, movieID).Scan(
 		&movie.ID,
 		&movie.Title,
@@ -149,10 +154,23 @@ func (ur *movieRepository) GetMovieDetail(ctx context.Context, movieID int) (*mo
 		&movie.WatchUrl,
 		&movie.Duration,
 		&movie.Views,
-		&movie.Artist,
-		&movie.Genres)
+		&artists,
+		&genres,
+	)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, genre := range genres {
+		if genre != "" {
+			movie.Genres = append(movie.Genres, genre)
+		}
+	}
+
+	for _, artist := range artists {
+		if artist != "" {
+			movie.Artist = append(movie.Artist, artist)
+		}
 	}
 
 	return movie, err
