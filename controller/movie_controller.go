@@ -12,10 +12,11 @@ import (
 
 type (
 	movieService interface {
-		MovieList(ctx context.Context) (dto.MovieListResponse, error)
+		MovieList(ctx context.Context, req dto.MovieListParams) (dto.MovieListResponse, error)
 		CreateMovie(ctx context.Context, req dto.CreateMoviePayload) error
 		UpdateMovie(ctx context.Context, req dto.CreateMoviePayload, movieID int) error
 		GetMovieDetail(ctx context.Context, movieID int) (*dto.MovieListResponseElement, error)
+		MostViewedMovieList(ctx context.Context) (dto.MovieListResponse, error)
 	}
 
 	MovieController struct {
@@ -29,13 +30,20 @@ func NewMovieController(movieService movieService) *MovieController {
 
 func (cc *MovieController) MovieList() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currencies, err := cc.movieService.MovieList(c)
+		var reqParams dto.MovieListParams
+		err := c.ShouldBindQuery(&reqParams)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		res, err := cc.movieService.MovieList(c, reqParams)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
 			return
 		}
 
-		c.JSON(http.StatusOK, dto.NewBaseResponse(currencies, nil))
+		c.JSON(http.StatusOK, dto.NewBaseResponse(res, nil))
 	}
 }
 
@@ -132,5 +140,18 @@ func (cc *MovieController) GetMovieDetail() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, dto.NewBaseResponse(movie, nil))
+	}
+}
+
+func (cc *MovieController) MostViewedMovieList() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		res, err := cc.movieService.MostViewedMovieList(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		c.JSON(http.StatusOK, dto.NewBaseResponse(res, nil))
 	}
 }

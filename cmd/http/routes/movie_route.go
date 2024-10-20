@@ -17,4 +17,6 @@ func MovieRoute(route *gin.RouterGroup, movieController *controller.MovieControl
 	movieRoutes.POST("", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.CreateMovie())
 	movieRoutes.PUT("/:movieID", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.UpdateMovie())
 	movieRoutes.GET("/:movieID", movieController.GetMovieDetail())
+	movieRoutes.GET("/popular", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.MostViewedMovieList())
+
 }

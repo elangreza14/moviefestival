@@ -47,3 +47,41 @@ func (ar *genreRepository) DeleteGenreMappingWithMovieId(ctx context.Context, mo
 	}
 	return err
 }
+
+type ViewedGenre struct {
+	Name  string `db:"name"`
+	Views int    `db:"views"`
+}
+
+func (ur *genreRepository) GetMostViewedGenres(ctx context.Context) ([]model.ViewedGenre, error) {
+	sql := `select 
+				mg.genre_name, SUM(mv."views") as views 
+			from 
+				movie_views mv join movie_genres mg 
+			on 
+				mv.movie_id = mg.movie_id 
+			group by 
+				mg.genre_name 
+			order by 
+				views desc limit 10`
+
+	rows, err := ur.db.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	res := []model.ViewedGenre{}
+	for rows.Next() {
+		genre := model.ViewedGenre{}
+		err = rows.Scan(&genre.Name, &genre.Views)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, genre)
+	}
+
+	return res, nil
+}

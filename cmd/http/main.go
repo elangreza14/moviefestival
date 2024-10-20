@@ -53,12 +53,15 @@ func main() {
 	tokenRepository := repository.NewTokenRepository(db)
 	movieRepository := repository.NewMovieRepository(db, db)
 	movieViewRepository := repository.NewMovieViewRepository(db, db)
+	genreRepository := repository.NewGenreRepository(db)
 
 	authService := service.NewAuthService(userRepository, tokenRepository)
 	movieService := service.NewMovieService(movieRepository, movieViewRepository)
+	genreService := service.NewGenreService(genreRepository)
 
 	authController := controller.NewAuthController(authService)
 	movieController := controller.NewMovieController(movieService)
+	genreController := controller.NewGenreController(genreService)
 
 	if os.Getenv("ENV") != "DEVELOPMENT" {
 		gin.SetMode(gin.ReleaseMode)
@@ -86,6 +89,7 @@ func main() {
 	apiGroup := router.Group("/api")
 	routes.AuthRoute(apiGroup, authController)
 	routes.MovieRoute(apiGroup, movieController, authMiddleware)
+	routes.GenreRoute(apiGroup, genreController, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    os.Getenv("HTTP_PORT"),

@@ -17,6 +17,7 @@ type (
 		CreateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
 		UpdateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
 		GetMovieDetail(ctx context.Context, movieID int) (*model.Movie, error)
+		GetMoviesWithPaginationAndSearch(ctx context.Context, search, searchBy, orderBy, orderDirection string, page, pageSize int) ([]model.Movie, error)
 	}
 
 	movieViewRepo interface {
@@ -36,8 +37,8 @@ func NewMovieService(movieRepo movieRepo, movieViewRepo movieViewRepo) *movieSer
 	}
 }
 
-func (cs *movieService) MovieList(ctx context.Context) (dto.MovieListResponse, error) {
-	movie, err := cs.movieRepo.GetAll(ctx)
+func (cs *movieService) MovieList(ctx context.Context, req dto.MovieListParams) (dto.MovieListResponse, error) {
+	movie, err := cs.movieRepo.GetMoviesWithPaginationAndSearch(ctx, req.Search, req.SearchBy, req.OrderBy, req.OrderDirection, req.Page, req.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +50,9 @@ func (cs *movieService) MovieList(ctx context.Context) (dto.MovieListResponse, e
 			Title:       movie.Title,
 			Description: movie.Description,
 			Duration:    movie.Duration.String(),
-			Artists:     []string{},
-			Genres:      []string{},
+			Views:       movie.Views,
+			Artists:     movie.Artist,
+			Genres:      movie.Genres,
 			WatchUrl:    movie.WatchUrl,
 		})
 	}
@@ -113,4 +115,27 @@ func (cs *movieService) GetMovieDetail(ctx context.Context, movieID int) (*dto.M
 		Artists:     movie.Artist,
 		Genres:      movie.Genres,
 	}, nil
+}
+
+func (cs *movieService) MostViewedMovieList(ctx context.Context) (dto.MovieListResponse, error) {
+	movie, err := cs.movieRepo.GetMoviesWithPaginationAndSearch(ctx, "", "", "views", "desc", 1, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]dto.MovieListResponseElement, 0)
+	for _, movie := range movie {
+		res = append(res, dto.MovieListResponseElement{
+			ID:          movie.ID,
+			Title:       movie.Title,
+			Description: movie.Description,
+			Duration:    movie.Duration.String(),
+			Views:       movie.Views,
+			Artists:     movie.Artist,
+			Genres:      movie.Genres,
+			WatchUrl:    movie.WatchUrl,
+		})
+	}
+
+	return res, nil
 }

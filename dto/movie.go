@@ -12,6 +12,15 @@ type (
 		Genres      []string `json:"genres"`
 	}
 
+	MovieListParams struct {
+		Search         string `form:"search"`
+		SearchBy       string `form:"searchBy"`
+		OrderBy        string `form:"orderBy"`
+		OrderDirection string `form:"orderDirection"`
+		Page           int    `form:"page"`
+		PageSize       int    `form:"pageSize"`
+	}
+
 	MovieListResponse []MovieListResponseElement
 
 	CreateMoviePayload struct {

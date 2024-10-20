@@ -5,12 +5,19 @@ import (
 	"time"
 )
 
-type Genre struct {
-	Name string `db:"name"`
+type (
+	Genre struct {
+		Name string `db:"name"`
 
-	CreatedAt time.Time    `db:"created_at"`
-	UpdatedAt sql.NullTime `db:"updated_at"`
-}
+		CreatedAt time.Time    `db:"created_at"`
+		UpdatedAt sql.NullTime `db:"updated_at"`
+	}
+
+	ViewedGenre struct {
+		Name  string
+		Views int
+	}
+)
 
 func (c Genre) TableName() string {
 	return "genres"
