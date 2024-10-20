@@ -8,6 +8,10 @@ make sure port 5432, 8080 is free. and copy env.example into .env. and run this 
 docker compose up -d --build
 ```
 
+and dont forget check the Postman docs in this file
+
+`./MovieFestival.postman_collection.json`
+
 make sure the application with this ping API
 
 ```curl

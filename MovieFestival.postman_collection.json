@@ -1,0 +1,324 @@
+{
+	"info": {
+		"_postman_id": "5f4e7a8f-d55a-445f-adde-0325820034e5",
+		"name": "MovieFestival",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10284395"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"test@test.com\",\n    \"name\":\"test\",\n    \"password\":\"test@test.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/auth/register",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"admin1@moviefestival.test\",\n    // \"email\":\"test@test.com\",\n    \"password\":\"test@test.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/auth/login",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "movies",
+			"item": [
+				{
+					"name": "upload movie",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/home/elangreza/Desktop/abishar/MovieFestival/public/examples/file_example_MP4_480_1_5MG.mp4"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies/upload",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create movie",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"test title\",\n    \"description\": \"test description\",\n    \"duration\": \"43s\",\n    \"artists\": [\n        \"artist 1\",\n        \"artist 2\"\n    ],\n    \"genres\": [\n        \"horror\"\n    ],\n    \"watch_url\": \"file_example_MP4_480_1_5MG.mp4\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "file movie serving",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // \"email\":\"admin1@moviefestival.test\",\n    \"email\":\"test@test.com\",\n    \"password\":\"test@test.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies/public/file_example_MP4_480_1_5MG.mp4",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								"public",
+								"file_example_MP4_480_1_5MG.mp4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit movie",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"test title\",\n    \"description\": \"test description\",\n    \"duration\": \"43s\",\n    \"artists\": [\n        \"artist 1\",\n        \"artist 3\"\n    ],\n    \"genres\": [\n        \"horror\"\n    ],\n    \"watch_url\": \"/api/movies/public/file_example_MP4_480_1_5MG.mp4\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies/15",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								"15"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get movie detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies/12",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								"12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get movie list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies?page=2&pageSize=3",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "pageSize",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get most popular movie",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_ENDPOINT}}/api/movies/popular",
+							"host": [
+								"{{API_ENDPOINT}}"
+							],
+							"path": [
+								"api",
+								"movies",
+								"popular"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "genres",
+			"item": []
+		},
+		{
+			"name": "get most popular genre",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{API_ENDPOINT}}/api/genres/popular",
+					"host": [
+						"{{API_ENDPOINT}}"
+					],
+					"path": [
+						"api",
+						"genres",
+						"popular"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJuZ3VqaS1hdXRoIiwiZXhwIjoxNzI5NDc4ODE5LCJpYXQiOjE3MjkzOTI0MTksImp0aSI6IjAxOTJhN2QyLTIzNDItNzY4Yi1iOWFiLTRlZTZhZGRlMTFhZCJ9.6bOxG1xttlfqslbIZeFbW63QjkwAgZZonh_Z3oO_Kig",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "API_ENDPOINT",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "TOKEN",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJuZ3VqaS1hdXRoIiwiZXhwIjoxNzI2MjMxOTQ3LCJpYXQiOjE3MjYxNDU1NDcsImp0aSI6IjAxOTFlNjRhLWNkMWEtNzE2MS04MjBjLWExN2E1ZTdhNDA3NiJ9.sveL6tHAjm40lNTGeXrGzNWNtdl0XfoFmXd7rSBVRv0",
+			"type": "string"
+		}
+	]
+}
