@@ -38,3 +38,12 @@ func (ar *artistRepository) InsertArtistWithMovieMapping(ctx context.Context, na
 	}
 	return err
 }
+
+func (ar *artistRepository) DeleteArtistMappingWithMovieId(ctx context.Context, movieID int) error {
+	sql := `DELETE FROM movie_artists WHERE movie_id = $1`
+	_, err := ar.db.Exec(ctx, sql, movieID)
+	if err != nil {
+		return err
+	}
+	return err
+}

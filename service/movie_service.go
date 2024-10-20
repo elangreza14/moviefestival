@@ -7,6 +7,7 @@ import (
 
 	"github.com/elangreza14/moviefestival/dto"
 	"github.com/elangreza14/moviefestival/model"
+	"github.com/jackc/pgx/v5"
 )
 
 type (
@@ -14,6 +15,7 @@ type (
 		GetAll(ctx context.Context) ([]model.Movie, error)
 		Get(ctx context.Context, by string, val any, columns ...string) (*model.Movie, error)
 		CreateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
+		UpdateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
 	}
 
 	movieService struct {
@@ -57,4 +59,25 @@ func (cs *movieService) CreateMovie(ctx context.Context, req dto.CreateMoviePayl
 
 	movie := model.NewMovie(req.Title, req.Description, req.WatchUrl, duration)
 	return cs.movieRepo.CreateMovieTX(ctx, *movie, req.Artists, req.Genres)
+}
+
+func (cs *movieService) UpdateMovie(ctx context.Context, req dto.CreateMoviePayload, movieID int) error {
+	movie, err := cs.movieRepo.Get(ctx, "id", movieID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errors.New("movie not found")
+		}
+		return err
+	}
+
+	duration, err := time.ParseDuration(req.Duration)
+	if err != nil {
+		return errors.New("cannot parse duration")
+	}
+	movie.Duration = duration
+	movie.Title = req.Title
+	movie.Description = req.Description
+	movie.WatchUrl = req.WatchUrl
+
+	return cs.movieRepo.UpdateMovieTX(ctx, *movie, req.Artists, req.Genres)
 }

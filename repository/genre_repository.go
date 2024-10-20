@@ -38,3 +38,12 @@ func (ar *genreRepository) InsertGenreWithMovieMapping(ctx context.Context, name
 	}
 	return err
 }
+
+func (ar *genreRepository) DeleteGenreMappingWithMovieId(ctx context.Context, movieID int) error {
+	sql := `DELETE FROM movie_genres WHERE movie_id=$1`
+	_, err := ar.db.Exec(ctx, sql, movieID)
+	if err != nil {
+		return err
+	}
+	return err
+}

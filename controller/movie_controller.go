@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/elangreza14/moviefestival/dto"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ type (
 	movieService interface {
 		MovieList(ctx context.Context) (dto.MovieListResponse, error)
 		CreateMovie(ctx context.Context, req dto.CreateMoviePayload) error
+		UpdateMovie(ctx context.Context, req dto.CreateMoviePayload, movieID int) error
 	}
 
 	MovieController struct {
@@ -77,6 +79,32 @@ func (cc *MovieController) CreateMovie() gin.HandlerFunc {
 		}
 
 		err = cc.movieService.CreateMovie(c, req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		c.JSON(http.StatusOK, dto.NewBaseResponse("ok", nil))
+	}
+}
+
+func (cc *MovieController) UpdateMovie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req dto.CreateMoviePayload
+		err := c.ShouldBindBodyWithJSON(&req)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		movieIDRaw := c.Param("movieID")
+		movieID, err := strconv.Atoi(movieIDRaw)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		err = cc.movieService.UpdateMovie(c, req, movieID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
 			return
