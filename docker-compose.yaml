@@ -38,21 +38,21 @@ services:
         "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL}",
         "up",
       ]
-  # app:
-  #   networks:
-  #     - moviefestival
-  #   ports:
-  #     - "8080:8080"
-  #   build: .
-  #   container_name: app
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #       restart: true
-  #     redis:
-  #       condition: service_started
+  app:
+    networks:
+      - moviefestival
+    ports:
+      - "8080:8080"
+    build: .
+    container_name: app
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_started
 
 networks:
   moviefestival:
