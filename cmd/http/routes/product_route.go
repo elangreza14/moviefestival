@@ -16,4 +16,5 @@ func MovieRoute(route *gin.RouterGroup, movieController *controller.MovieControl
 	movieRoutes.POST("/upload", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.UploadMovie())
 	movieRoutes.POST("", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.CreateMovie())
 	movieRoutes.PUT("/:movieID", middleware.MustAuthMiddleware(), middleware.MustHavePermissionMiddleware(model.AdminValPermission), movieController.UpdateMovie())
+	movieRoutes.GET("/:movieID", movieController.GetMovieDetail())
 }

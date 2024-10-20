@@ -12,6 +12,11 @@ type Movie struct {
 	WatchUrl    string        `db:"watch_url"`
 	Duration    time.Duration `db:"duration"`
 
+	// get data from another table
+	Genres []string
+	Artist []string
+	Views  int
+
 	CreatedAt time.Time    `db:"created_at"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
 }

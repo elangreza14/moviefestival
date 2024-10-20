@@ -52,9 +52,10 @@ func main() {
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokenRepository(db)
 	movieRepository := repository.NewMovieRepository(db, db)
+	movieViewRepository := repository.NewMovieViewRepository(db, db)
 
 	authService := service.NewAuthService(userRepository, tokenRepository)
-	movieService := service.NewMovieService(movieRepository)
+	movieService := service.NewMovieService(movieRepository, movieViewRepository)
 
 	authController := controller.NewAuthController(authService)
 	movieController := controller.NewMovieController(movieService)

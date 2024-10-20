@@ -16,16 +16,23 @@ type (
 		Get(ctx context.Context, by string, val any, columns ...string) (*model.Movie, error)
 		CreateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
 		UpdateMovieTX(ctx context.Context, movie model.Movie, artists []string, genres []string) error
+		GetMovieDetail(ctx context.Context, movieID int) (*model.Movie, error)
+	}
+
+	movieViewRepo interface {
+		AddMovieViewTX(ctx context.Context, movieID int) error
 	}
 
 	movieService struct {
-		movieRepo movieRepo
+		movieRepo     movieRepo
+		movieViewRepo movieViewRepo
 	}
 )
 
-func NewMovieService(movieRepo movieRepo) *movieService {
+func NewMovieService(movieRepo movieRepo, movieViewRepo movieViewRepo) *movieService {
 	return &movieService{
-		movieRepo: movieRepo,
+		movieRepo:     movieRepo,
+		movieViewRepo: movieViewRepo,
 	}
 }
 
@@ -41,7 +48,7 @@ func (cs *movieService) MovieList(ctx context.Context) (dto.MovieListResponse, e
 			ID:          movie.ID,
 			Title:       movie.Title,
 			Description: movie.Description,
-			Duration:    movie.Duration,
+			Duration:    movie.Duration.String(),
 			Artists:     []string{},
 			Genres:      []string{},
 			WatchUrl:    movie.WatchUrl,
@@ -80,4 +87,30 @@ func (cs *movieService) UpdateMovie(ctx context.Context, req dto.CreateMoviePayl
 	movie.WatchUrl = req.WatchUrl
 
 	return cs.movieRepo.UpdateMovieTX(ctx, *movie, req.Artists, req.Genres)
+}
+
+func (cs *movieService) GetMovieDetail(ctx context.Context, movieID int) (*dto.MovieListResponseElement, error) {
+	err := cs.movieViewRepo.AddMovieViewTX(ctx, movieID)
+	if err != nil {
+		return nil, err
+	}
+
+	movie, err := cs.movieRepo.GetMovieDetail(ctx, movieID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, errors.New("movie not found")
+		}
+		return nil, err
+	}
+
+	return &dto.MovieListResponseElement{
+		ID:          movieID,
+		Title:       movie.Title,
+		Description: movie.Description,
+		Duration:    movie.Duration.String(),
+		WatchUrl:    movie.WatchUrl,
+		Views:       movie.Views,
+		Artists:     movie.Artist,
+		Genres:      movie.Genres,
+	}, nil
 }

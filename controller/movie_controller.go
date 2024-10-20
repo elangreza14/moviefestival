@@ -15,6 +15,7 @@ type (
 		MovieList(ctx context.Context) (dto.MovieListResponse, error)
 		CreateMovie(ctx context.Context, req dto.CreateMoviePayload) error
 		UpdateMovie(ctx context.Context, req dto.CreateMoviePayload, movieID int) error
+		GetMovieDetail(ctx context.Context, movieID int) (*dto.MovieListResponseElement, error)
 	}
 
 	MovieController struct {
@@ -111,5 +112,25 @@ func (cc *MovieController) UpdateMovie() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, dto.NewBaseResponse("ok", nil))
+	}
+}
+
+func (cc *MovieController) GetMovieDetail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		movieIDRaw := c.Param("movieID")
+		movieID, err := strconv.Atoi(movieIDRaw)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		movie, err := cc.movieService.GetMovieDetail(c, movieID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
+			return
+		}
+
+		c.JSON(http.StatusOK, dto.NewBaseResponse(movie, nil))
 	}
 }

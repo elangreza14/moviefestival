@@ -119,3 +119,41 @@ func (ur *movieRepository) CreateAndScanId(ctx context.Context, movie *model.Mov
 		QueryRow(ctx, sql, movie.Title, movie.Description, movie.WatchUrl, movie.Duration).
 		Scan(&movie.ID)
 }
+
+func (ur *movieRepository) GetMovieDetail(ctx context.Context, movieID int) (*model.Movie, error) {
+
+	sql := `SELECT 
+				m.id,
+				m.title,
+				m.description,
+				m.watch_url,
+				m.duration,
+				coalesce (mv."views", 0) as views,
+				JSON_AGG(distinct ma.artist_name) as artists,
+				JSON_AGG(distinct mg.genre_name) as genres
+			FROM 
+				movies m 
+			join 
+				movie_artists ma on m.id = ma.movie_id 
+			join 
+				movie_genres mg on m.id = mg.movie_id 
+			left join
+				movie_views mv on m.id = mv.movie_id
+			where m.id = $1 group by m.id, mv."views" limit 1`
+
+	movie := &model.Movie{}
+	err := ur.db.QueryRow(ctx, sql, movieID).Scan(
+		&movie.ID,
+		&movie.Title,
+		&movie.Description,
+		&movie.WatchUrl,
+		&movie.Duration,
+		&movie.Views,
+		&movie.Artist,
+		&movie.Genres)
+	if err != nil {
+		return nil, err
+	}
+
+	return movie, err
+}
