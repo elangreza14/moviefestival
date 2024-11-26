@@ -78,7 +78,7 @@ func (cs *movieService) UpdateMovie(ctx context.Context, req dto.CreateMoviePayl
 	movie, err := cs.movieRepo.Get(ctx, "id", movieID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return errors.New("movie not found")
+			return dto.ErrorNotFound{Entity: "movie"}
 		}
 		return err
 	}
@@ -96,16 +96,16 @@ func (cs *movieService) UpdateMovie(ctx context.Context, req dto.CreateMoviePayl
 }
 
 func (cs *movieService) GetMovieDetail(ctx context.Context, movieID int) (*dto.MovieListResponseElement, error) {
-	err := cs.movieViewRepo.AddMovieViewTX(ctx, movieID)
-	if err != nil {
-		return nil, err
-	}
 
 	movie, err := cs.movieRepo.GetMovieDetail(ctx, movieID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, errors.New("movie not found")
+			return nil, dto.ErrorNotFound{Entity: "movie"}
 		}
+		return nil, err
+	}
+
+	if err = cs.movieViewRepo.AddMovieViewTX(ctx, movieID); err != nil {
 		return nil, err
 	}
 

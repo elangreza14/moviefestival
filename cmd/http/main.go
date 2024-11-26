@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/elangreza14/moviefestival/cmd/http/config"
 	"github.com/elangreza14/moviefestival/cmd/http/routes"
 	"github.com/elangreza14/moviefestival/controller"
 	"github.com/elangreza14/moviefestival/middleware"
@@ -23,29 +24,25 @@ import (
 	pgxzap "github.com/jackc/pgx-zap"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
 func main() {
 	// setup env
-	curDir, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	}
-	err = godotenv.Load(curDir + "/.env")
+
+	cfg, err := config.LoadConfig()
 	errChecker(err)
 
 	// logger
-	logger, err := Logger()
+	logger, err := Logger(cfg)
 	errChecker(err)
 	defer logger.Sync()
 
 	ctx := context.Background()
 
 	// db connection
-	db, err := DB(ctx, logger)
+	db, err := DB(ctx, cfg, logger)
 	errChecker(err)
 
 	// dependency injection
@@ -63,15 +60,15 @@ func main() {
 	movieController := controller.NewMovieController(movieService)
 	genreController := controller.NewGenreController(genreService)
 
-	if os.Getenv("ENV") != "DEVELOPMENT" {
+	if cfg.ENV != "DEVELOPMENT" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 
 	// cors middleware
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{fmt.Sprintf("http://localhost%s", os.Getenv("HTTP_PORT"))}
-	router.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = cfg.ALLOWED_ORIGINS
+	router.Use(cors.New(corsConfig))
 
 	// logger middleware
 	router.Use(ginzap.RecoveryWithZap(logger, true))
@@ -82,7 +79,6 @@ func main() {
 		c.String(http.StatusOK, "pong")
 	})
 
-	// TODO use this
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// group api
@@ -92,7 +88,7 @@ func main() {
 	routes.GenreRoute(apiGroup, genreController, authMiddleware)
 
 	srv := &http.Server{
-		Addr:    os.Getenv("HTTP_PORT"),
+		Addr:    cfg.HTTP_PORT,
 		Handler: router.Handler(),
 	}
 
@@ -103,7 +99,7 @@ func main() {
 		}
 	}()
 
-	wait := gracefulShutdown(context.Background(), logger, time.Second*5,
+	waitOperations := gracefulShutdown(context.Background(), logger, time.Second*5,
 		func(ctx context.Context) error {
 			return srv.Shutdown(ctx)
 		},
@@ -112,7 +108,7 @@ func main() {
 			return nil
 		})
 
-	<-wait
+	<-waitOperations
 }
 
 func errChecker(err error) {
@@ -121,36 +117,15 @@ func errChecker(err error) {
 	}
 }
 
-func DB(ctx context.Context, logger *zap.Logger) (*pgxpool.Pool, error) {
+func DB(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*pgxpool.Pool, error) {
 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_HOSTNAME"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_DB"),
-		os.Getenv("POSTGRES_SSL"),
+		cfg.POSTGRES_USER,
+		cfg.POSTGRES_PASSWORD,
+		cfg.POSTGRES_HOSTNAME,
+		cfg.POSTGRES_PORT,
+		cfg.POSTGRES_DB,
+		cfg.POSTGRES_SSL,
 	)
-
-	// db, err := sql.Open("postgres", connString)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// driver, err := postgres.WithInstance(db, &postgres.Config{})
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file://%s", os.Getenv("MIGRATION_FOLDER")), "postgres", driver)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if err := m.Up(); err != nil {
-	// 	if err != migrate.ErrNoChange {
-	// 		return nil, err
-	// 	}
-	// }
 
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
@@ -172,18 +147,16 @@ func DB(ctx context.Context, logger *zap.Logger) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	err = conn.Ping(ctx)
-	if err != nil {
+	if err = conn.Ping(ctx); err != nil {
 		return nil, err
 	}
 
 	return conn, nil
 }
 
-func Logger() (*zap.Logger, error) {
+func Logger(cfg *config.Config) (*zap.Logger, error) {
 	logger := zap.NewExample(zap.IncreaseLevel(zap.InfoLevel))
-
-	if os.Getenv("ENV") != "DEVELOPMENT" {
+	if cfg.ENV != "DEVELOPMENT" {
 		return zap.NewProduction()
 	}
 

@@ -68,7 +68,10 @@ func (as *AuthService) LoginUser(ctx context.Context, req dto.LoginPayload) (*dt
 	}
 
 	token, err := as.TokenRepo.Get(ctx, "user_id", user.ID, "token")
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, dto.ErrorNotFound{Entity: "user"}
+		}
 		return nil, err
 	}
 

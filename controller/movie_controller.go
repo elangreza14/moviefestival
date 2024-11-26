@@ -115,6 +115,10 @@ func (cc *MovieController) UpdateMovie() gin.HandlerFunc {
 
 		err = cc.movieService.UpdateMovie(c, req, movieID)
 		if err != nil {
+			if errors.As(err, &dto.ErrorNotFound{}) {
+				c.AbortWithStatusJSON(http.StatusNotFound, dto.NewBaseResponse(nil, err))
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
 			return
 		}
@@ -135,6 +139,10 @@ func (cc *MovieController) GetMovieDetail() gin.HandlerFunc {
 
 		movie, err := cc.movieService.GetMovieDetail(c, movieID)
 		if err != nil {
+			if errors.As(err, &dto.ErrorNotFound{}) {
+				c.AbortWithStatusJSON(http.StatusNotFound, dto.NewBaseResponse(nil, err))
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
 			return
 		}

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/elangreza14/moviefestival/dto"
@@ -55,6 +56,10 @@ func (ac *AuthController) LoginUser() gin.HandlerFunc {
 
 		token, err := ac.authService.LoginUser(c, req)
 		if err != nil {
+			if errors.As(err, &dto.ErrorNotFound{}) {
+				c.AbortWithStatusJSON(http.StatusNotFound, dto.NewBaseResponse(nil, err))
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusInternalServerError, dto.NewBaseResponse(nil, err))
 			return
 		}

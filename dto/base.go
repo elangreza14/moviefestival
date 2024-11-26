@@ -22,7 +22,6 @@ type ErrorResponse struct {
 }
 
 func NewBaseResponse(data any, err error) any {
-
 	if message, ok := data.(string); ok && err == nil {
 		return SuccessResponsePlain{
 			Result: message,

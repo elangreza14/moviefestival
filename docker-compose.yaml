@@ -53,10 +53,8 @@ services:
         restart: true
       redis:
         condition: service_started
-
 networks:
   moviefestival:
     driver: bridge
-
 volumes:
   database-data:
