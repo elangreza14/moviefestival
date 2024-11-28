@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/elangreza14/moviefestival/controller"
+	"github.com/elangreza14/moviefestival/cmd/http/controller"
 	"github.com/gin-gonic/gin"
 )
 

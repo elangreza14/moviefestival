@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/elangreza14/moviefestival/cmd/http/config"
+	"github.com/elangreza14/moviefestival/cmd/http/controller"
+	"github.com/elangreza14/moviefestival/cmd/http/middleware"
 	"github.com/elangreza14/moviefestival/cmd/http/routes"
-	"github.com/elangreza14/moviefestival/controller"
-	"github.com/elangreza14/moviefestival/middleware"
-	"github.com/elangreza14/moviefestival/repository"
-	"github.com/elangreza14/moviefestival/service"
+	"github.com/elangreza14/moviefestival/internal/postgres"
+	"github.com/elangreza14/moviefestival/internal/service"
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -46,14 +46,19 @@ func main() {
 	errChecker(err)
 
 	// dependency injection
-	userRepository := repository.NewUserRepository(db)
-	tokenRepository := repository.NewTokenRepository(db)
-	movieRepository := repository.NewMovieRepository(db, db)
-	movieViewRepository := repository.NewMovieViewRepository(db, db)
-	genreRepository := repository.NewGenreRepository(db)
+	userRepository := postgres.NewUserRepository(db)
+	tokenRepository := postgres.NewTokenRepository(db)
+	movieRepository := postgres.NewMovieRepository(db, nil)
+	movieViewRepository := postgres.NewMovieViewRepository(db, nil)
+	genreRepository := postgres.NewGenreRepository(db)
 
-	authService := service.NewAuthService(userRepository, tokenRepository)
-	movieService := service.NewMovieService(movieRepository, movieViewRepository)
+	serviceConfig := service.ServiceConfig{
+		TokenSecret: cfg.TOKEN_SECRET,
+		BaseURL:     fmt.Sprintf("%s%s", cfg.BASE_URL, cfg.HTTP_PORT),
+	}
+
+	authService := service.NewAuthService(userRepository, tokenRepository, serviceConfig)
+	movieService := service.NewMovieService(movieRepository, movieViewRepository, serviceConfig)
 	genreService := service.NewGenreService(genreRepository)
 
 	authController := controller.NewAuthController(authService)
@@ -88,8 +93,11 @@ func main() {
 	routes.GenreRoute(apiGroup, genreController, authMiddleware)
 
 	srv := &http.Server{
-		Addr:    cfg.HTTP_PORT,
-		Handler: router.Handler(),
+		Addr:         cfg.HTTP_PORT,
+		Handler:      router.Handler(),
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
 	}
 
 	go func() {
@@ -99,7 +107,7 @@ func main() {
 		}
 	}()
 
-	waitOperations := gracefulShutdown(context.Background(), logger, time.Second*5,
+	waitOperations := gracefulShutdown(ctx, logger, time.Second*5,
 		func(ctx context.Context) error {
 			return srv.Shutdown(ctx)
 		},
@@ -132,14 +140,16 @@ func DB(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*pgxpool.P
 		return nil, err
 	}
 
-	logLevel, err := tracelog.LogLevelFromString(logger.Level().String())
-	if err != nil {
-		return nil, err
-	}
+	if cfg.TRACE_DB {
+		logLevel, err := tracelog.LogLevelFromString(logger.Level().String())
+		if err != nil {
+			return nil, err
+		}
 
-	config.ConnConfig.Tracer = &tracelog.TraceLog{
-		Logger:   pgxzap.NewLogger(logger),
-		LogLevel: logLevel,
+		config.ConnConfig.Tracer = &tracelog.TraceLog{
+			Logger:   pgxzap.NewLogger(logger),
+			LogLevel: logLevel,
+		}
 	}
 
 	conn, err := pgxpool.NewWithConfig(ctx, config)
@@ -155,12 +165,11 @@ func DB(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*pgxpool.P
 }
 
 func Logger(cfg *config.Config) (*zap.Logger, error) {
-	logger := zap.NewExample(zap.IncreaseLevel(zap.InfoLevel))
 	if cfg.ENV != "DEVELOPMENT" {
 		return zap.NewProduction()
 	}
 
-	return logger, nil
+	return zap.NewExample(zap.IncreaseLevel(zap.InfoLevel)), nil
 }
 
 type operation func(ctx context.Context) error
